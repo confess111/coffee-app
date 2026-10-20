@@ -22,7 +22,7 @@
     html, body {
       min-height: 100%;
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-      background: #EBD9C6;
+      background: #EFE0D0;
       color: #3D2817;
       -webkit-tap-highlight-color: rgba(0,0,0,0.08);
       overflow-x: hidden;
@@ -35,19 +35,19 @@
       min-height: 100vh;
     }
 
-    /* 头部 - 半透明暖棕（约72%）+ 毛玻璃，透出底下粉色底，整页同色系 */
+    /* 头部 - 深色 + 苹果风玻璃高光 */
     .header {
       position: relative;
       background:
-        linear-gradient(135deg, rgba(120,84,58,0.72) 0%, rgba(100,68,46,0.72) 100%),
-        radial-gradient(circle at 82% 18%, rgba(255,214,158,0.30) 0%, transparent 48%);
+        linear-gradient(135deg, rgba(104,66,38,0.70) 0%, rgba(62,39,22,0.80) 100%),
+        radial-gradient(circle at 82% 18%, rgba(220,166,100,0.34) 0%, transparent 48%);
       -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
       backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
       border: 1.5px solid rgba(214,176,132,0.28);
       border-radius: 28px;
       padding: 26px 26px 28px;
       box-shadow:
-        0 10px 30px rgba(110,72,44,0.20),
+        0 10px 30px rgba(40,22,10,0.18),
         var(--glass-hi);
       overflow: hidden;
       overscroll-behavior: contain;
@@ -555,7 +555,7 @@
     }
     .footer-ver { text-align: center; color: #B8A88F; font-size: 12px; margin-top: 26px; padding-bottom: 22px; }
 
-    /* 头部备份按钮（新增，与统计卡同款玻璃质感） */
+    /* ===== 新增(仅功能)：头部 复制备份 / 恢复；原视觉零改动 ===== */
     .hdr-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; margin-right: 10px; }
     .hdr-btn {
       flex: none; height: 40px; padding: 0 14px; border-radius: 14px;
@@ -569,88 +569,15 @@
       transition: transform .12s cubic-bezier(0.22,1,0.36,1), background .15s;
     }
     .hdr-btn:active { transform: scale(0.95); background: linear-gradient(180deg, rgba(255,248,240,0.36), rgba(255,248,240,0.18)); }
-    .hdr-btn .dot { opacity: .85; }
-    @media (max-width: 520px) {
-      .hdr-btn { height: 36px; padding: 0 10px; font-size: 12.5px; }
-      .hdr-actions { gap: 6px; margin-right: 8px; }
-    }
-    /* 窄屏（手机/分屏）：slogan 独占一行，按钮与统计卡下一行，避免重叠 */
     @media (max-width: 760px) {
       .header-bottom { flex-wrap: wrap; row-gap: 12px; }
       .slogan { flex: 1 1 100%; min-height: 0; }
       .hdr-actions { margin-left: 0; margin-right: auto; order: 2; }
       .header-right { order: 3; margin-left: auto; }
     }
-    /* 手机窄屏：统计卡单独占一行，绝不再挤压重叠 */
     @media (max-width: 430px) {
       .header-right { flex: 1 1 100%; justify-content: flex-end; order: 4; }
       .hdr-btn { font-size: 12px; padding: 0 9px; height: 34px; }
-    }
-
-    /* ========== 毛玻璃统一层（新增；布局/字号/位置一律不动） ========== */
-    :root {
-      --gp-blur: 24px;
-      --gp-sat: 165%;
-      --gp-bg: rgba(255,253,250,0.575);
-      --gp-bg-soft: rgba(255,252,247,0.30);
-      --gp-bd: rgba(255,255,255,0.58);
-      --gp-shadow: 0 12px 32px rgba(120,80,40,0.16);
-      --gp-shadow-sm: 0 5px 16px rgba(120,80,40,0.12);
-    }
-    /* 背景层：暖粉米 → 奶茶粉，180° 只加深一点点。同一色相，渐变内无白/灰/黑色标、无黑色遮罩 */
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      height: 100%;
-      height: 100dvh;
-      z-index: -1;
-      pointer-events: none;
-      background:
-        radial-gradient(58% 44% at 8% 6%, rgba(255,236,179,0.25) 0%, rgba(255,236,179,0) 62%),
-        radial-gradient(52% 40% at 92% 94%, rgba(246,201,201,0.25) 0%, rgba(246,201,201,0) 64%),
-        linear-gradient(180deg, #F6E8DE 0%, #EBCFBE 50%, #D9A992 100%);
-    }
-    /* html 只做同色系兜底，避免首屏闪深色（底部 #D9A992 不深于 #D4A48C，不会变泥棕） */
-    html { background-color: #F6E8DE; background-image: none; }
-    body { background: transparent; }
-    /* 每天卡片：半透明白 + 统一模糊 */
-    .day-card {
-      background: var(--gp-bg);
-      border: 1px solid var(--gp-bd);
-      -webkit-backdrop-filter: blur(var(--gp-blur)) saturate(var(--gp-sat));
-      backdrop-filter: blur(var(--gp-blur)) saturate(var(--gp-sat));
-      box-shadow: var(--gp-shadow), var(--glass-hi);
-    }
-    /* 照片格子 */
-    .photo-cell {
-      background: var(--gp-bg-soft);
-      border: 1px solid var(--gp-bd);
-      -webkit-backdrop-filter: blur(var(--gp-blur)) saturate(var(--gp-sat));
-      backdrop-filter: blur(var(--gp-blur)) saturate(var(--gp-sat));
-      box-shadow: var(--gp-shadow-sm), var(--glass-hi);
-    }
-    .photo-foot {
-      background: rgba(255,255,255,0.42);
-      -webkit-backdrop-filter: blur(14px) saturate(140%);
-      backdrop-filter: blur(14px) saturate(140%);
-      border-top: 1px solid rgba(255,255,255,0.5);
-    }
-    /* 弹窗：略实一点，保证文字清楚 */
-    .modal {
-      background: rgba(251,247,242,0.82);
-      -webkit-backdrop-filter: blur(22px) saturate(140%);
-      backdrop-filter: blur(22px) saturate(140%);
-      border: 1px solid rgba(255,255,255,0.6);
-    }
-    /* 顶部按钮 / 工具栏按钮 / 记录按钮：统一暖棕阴影 */
-    .hdr-btn, .tool-btn { box-shadow: var(--gp-shadow-sm), var(--glass-hi); }
-    .record-btn { box-shadow: 0 10px 26px rgba(120,80,40,0.24), var(--glass-hi); }
-    /* 统计卡：跟着统一变量 */
-    .stat-card {
-      -webkit-backdrop-filter: blur(var(--gp-blur)) saturate(var(--gp-sat));
-      backdrop-filter: blur(var(--gp-blur)) saturate(var(--gp-sat));
-      box-shadow: var(--gp-shadow-sm), var(--glass-hi);
     }
   </style>
 </head>
@@ -737,21 +664,6 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="backupModal">
-    <div class="modal">
-      <div class="modal-title">恢复备份</div>
-      <div class="modal-scroll">
-        <div class="modal-label">把之前复制的备份文本整段粘进来</div>
-        <textarea class="modal-input" id="backupText" style="height:170px; font-size:11px; line-height:1.5;" placeholder="粘贴备份文本…"></textarea>
-        <div class="type-hint" id="backupHint"></div>
-      </div>
-      <div class="modal-btns">
-        <button class="modal-btn cancel" id="backupClose">关闭</button>
-        <button class="modal-btn save" id="backupRestore">确认恢复</button>
-      </div>
-    </div>
-  </div>
-
   <div class="modal-overlay" id="detailModal">
     <div class="modal">
       <div class="modal-scroll">
@@ -800,9 +712,24 @@
     <div class="viewer-hint">点击任意处关闭</div>
   </div>
 
+  <div class="modal-overlay" id="backupModal">
+    <div class="modal">
+      <div class="modal-title">恢复备份</div>
+      <div class="modal-scroll">
+        <div class="modal-label">把之前复制的备份文本整段粘进来</div>
+        <textarea class="modal-input" id="backupText" style="height:170px; font-size:11px; line-height:1.5;" placeholder="粘贴备份文本…"></textarea>
+        <div class="type-hint" id="backupHint"></div>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-btn cancel" id="backupClose">关闭</button>
+        <button class="modal-btn save" id="backupRestore">确认恢复</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = 'cafe_latte_preview_v7';
-    const APP_VERSION = '46';
+    const APP_VERSION = '47';
     const COMPRESS_MAX = 1280;
     const COMPRESS_QUALITY = 0.78;
 
@@ -1457,7 +1384,7 @@
     }
     function openRestore() {
       document.getElementById('backupText').value = '';
-      setBackupHint('当前已有 ' + days.length + ' 天记录，恢复会整体替换', false);
+      setBackupHint('当前已有 ' + days.length + ' 天记录，恢复会整体替换，建议先复制备份', false);
       openModal('backupModal');
     }
     document.getElementById('copyBtn').addEventListener('click', copyBackup);
