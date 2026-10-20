@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>逸咖 · 安装</title>
+<link rel="manifest" href="./manifest.json">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(160deg, #3D2817 0%, #5A3D24 55%, #2C1C10 100%);
+    color: #F2E6D8;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wrap {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px 24px; gap: 16px;
+  }
+  .title { font-size: 20px; font-weight: 700; letter-spacing: 1px; opacity: 0.92; text-align: center; }
+  .hint { font-size: 14px; opacity: 0.6; text-align: center; line-height: 1.6; margin-bottom: 4px; }
+  .status {
+    width: 100%; max-width: 360px; padding: 12px 14px; border-radius: 14px;
+    background: rgba(0,0,0,0.28); font-size: 13.5px; line-height: 1.5; text-align: center;
+    border: 1px solid rgba(247,235,217,0.18);
+  }
+  .install-btn {
+    width: 100%; max-width: 360px; padding: 18px; border: none; border-radius: 22px;
+    font-size: 18px; font-weight: 700; color: #3D2817;
+    background: linear-gradient(135deg, #FFD9A0 0%, #F2A65A 100%);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.35); cursor: pointer; user-select: none; touch-action: manipulation;
+    transition: transform 0.12s; display: none;
+  }
+  .install-btn:active { transform: scale(0.97); }
+  .install-tip { width: 100%; max-width: 360px; font-size: 13px; opacity: 0.85; text-align: center; line-height: 1.5; min-height: 18px; }
+  .menu-guide {
+    width: 100%; max-width: 360px; padding: 16px 18px; border-radius: 18px;
+    background: rgba(255,255,255,0.10); border: 1px solid rgba(247,235,217,0.25);
+  }
+  .menu-title { font-size: 14px; font-weight: 700; color: #FFD9A0; margin-bottom: 10px; text-align: center; }
+  .menu-step { font-size: 13.5px; line-height: 1.9; opacity: 0.92; }
+  .menu-step b { color: #FFD9A0; }
+  .copy-btn {
+    width: 100%; max-width: 360px; padding: 16px; border: none; border-radius: 20px;
+    font-size: 17px; font-weight: 700; color: #3D2817;
+    background: linear-gradient(135deg, #F7EBD9 0%, #E8D4BB 100%);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.6);
+    cursor: pointer; user-select: none; touch-action: manipulation;
+  }
+  .copy-btn:active { transform: scale(0.97); }
+  .open-btn {
+    width: 100%; max-width: 360px; padding: 14px; border: 1.5px solid rgba(247,235,217,0.5);
+    border-radius: 18px; font-size: 15px; color: #F2E6D8; background: rgba(255,255,255,0.08);
+    cursor: pointer; user-select: none; touch-action: manipulation;
+  }
+  .open-btn:active { background: rgba(255,255,255,0.16); }
+  .link-box {
+    width: 100%; max-width: 360px; padding: 14px; border-radius: 16px; background: rgba(0,0,0,0.25);
+    font-size: 12.5px; line-height: 1.5; word-break: break-all; color: #D8C4AD; text-align: center; user-select: text;
+  }
+  .toast {
+    position: fixed; left: 50%; bottom: 60px; transform: translateX(-50%) translateY(20px);
+    background: rgba(0,0,0,0.82); color: #fff; padding: 12px 22px; border-radius: 14px; font-size: 15px;
+    opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">逸咖</div>
+    <div class="hint">用手机 Edge 打开本页，即可像 APP 一样装到桌面</div>
+
+    <div class="status" id="status">正在检测安装环境…</div>
+
+    <button class="install-btn" id="installBtn">📲 一键安装「逸咖」到桌面</button>
+    <div class="install-tip" id="installTip"></div>
+
+    <div class="menu-guide">
+      <div class="menu-title">安卓 Edge 弹窗有两个选项，一定看这里</div>
+      <div class="menu-step"><b>选项 A：「安装」</b>（推荐）→ 装成真正的独立 APP。点完后页面会显示「已安装」，但图标<strong>不会自动出现在桌面首页</strong>，而是进了「应用抽屉」（全部应用）。你要自己：上滑桌面打开全部应用 → 找到「逸咖」咖啡图标 → 长按拖到桌面首页。</div>
+      <div class="menu-step"><b>选项 B：「创建快捷方式」</b> → 直接放桌面首页，但本质是个浏览器书签，打开时会显示地址栏，不是真正的独立 APP。</div>
+      <div class="menu-step" style="margin-top:8px;">① 确认你用的是手机 <b>Edge</b>（不是隐私窗口）；② 点弹窗里的 <b>「安装」</b>；③ 在「安装应用」确认框里再点 <b>「安装」</b>；④ 去 <b>应用抽屉</b> 找到「逸咖」拖出来。</div>
+      <div class="menu-step" style="opacity:.7;font-size:12px;margin-top:6px;">⚠️ 图标不会进「下载」文件夹；「安装」成功但桌面首页没图标 = 正常现象，它在应用抽屉里等你拖出来。</div>
+    </div>
+
+    <button class="copy-btn" id="copyBtn">📋 一键复制最新链接</button>
+    <button class="open-btn" id="openBtn">▶ 直接打开程序</button>
+    <div class="link-box" id="linkText">https://2e1e128a59c74f2dbd54bfe4f29d417e.app.workbuddy.link?v=41</div>
+  </div>
+  <div class="toast" id="toast">已复制 ✓</div>
+
+<script>
+  var TARGET = 'https://2e1e128a59c74f2dbd54bfe4f29d417e.app.workbuddy.link?v=41';
+
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 1600);
+  }
+  function copyLink() {
+    var ta = document.createElement('textarea');
+    ta.value = TARGET; ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed'; ta.style.top = '-9999px'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    if (ok) toast('已复制 ✓'); else toast('复制失败，请长按下方链接手动复制');
+  }
+  document.getElementById('copyBtn').addEventListener('click', copyLink);
+  document.getElementById('openBtn').addEventListener('click', function () { window.location.href = TARGET; });
+
+  // ===== PWA 安装（修复：不再一次性失效 + 状态可见）=====
+  var installBtn = document.getElementById('installBtn');
+  var installTip = document.getElementById('installTip');
+  var statusEl = document.getElementById('status');
+
+  function setStatus(msg, good) {
+    statusEl.textContent = msg;
+    statusEl.style.color = good ? '#9BE8A0' : '#FFD9A0';
+  }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(function () { console.log('SW registered'); })
+      .catch(function (e) { console.log('SW err', e); setStatus('❌ 安装环境失败，请用普通窗口重试', false); });
+    if (navigator.serviceWorker.controller) {
+      setStatus('✅ 安装环境已就绪：点右上角 ⋮ → 安装应用', true);
+    } else {
+      setStatus('⏳ 正在准备安装环境，请刷新本页一次', false);
+      navigator.serviceWorker.ready.then(function () {
+        setStatus('✅ 安装环境已就绪：点右上角 ⋮ → 安装应用', true);
+      });
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      setStatus('✅ 安装环境已就绪：点右上角 ⋮ → 安装应用', true);
+    });
+  } else {
+    setStatus('❌ 当前浏览器不支持，请换 Edge / Chrome', false);
+  }
+
+  var deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = '';
+    installTip.textContent = '点上面按钮即可弹出安装，或点 Edge 右上角 ⋮ → 安装应用';
+  });
+
+  window.addEventListener('appinstalled', function () {
+    installBtn.style.display = 'none';
+    installTip.textContent = '';
+    setStatus('✅ 已安装为独立 APP！上滑桌面打开「应用抽屉」→ 找「逸咖」咖啡图标 → 长按拖到桌面首页', true);
+  });
+
+  installBtn.addEventListener('click', function () {
+    if (!deferredPrompt) {
+      installTip.textContent = '没自动弹？请点 Edge 右上角 ⋮ 菜单 → 选「安装应用」（最稳的一招）';
+      return;
+    }
+    deferredPrompt.prompt();
+    try {
+      deferredPrompt.userChoice.then(function (choice) {
+        if (choice.outcome === 'accepted') {
+          installTip.textContent = '✅ 已在安装，按弹窗点「安装」即可';
+        } else {
+          installTip.textContent = '你取消了。也可点 Edge 右上角 ⋮ → 安装应用 来装';
+        }
+      });
+    } catch (e) {}
+    deferredPrompt = null;
+  });
+</script>
+</body>
+</html>
