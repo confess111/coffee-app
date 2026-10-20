@@ -1,4 +1,4 @@
-const CACHE = 'cafe-latte-v47';
+const CACHE = 'cafe-latte-v48';
 const ASSETS = ['./', './index.html', './copy.html', './manifest.json', './icon-192.png', './icon-512.png', './cover.png'];
 
 self.addEventListener('install', (e) => {
