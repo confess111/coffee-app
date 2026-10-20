@@ -554,6 +554,26 @@
       touch-action: manipulation; -webkit-tap-highlight-color: transparent; flex-shrink: 0;
     }
     .footer-ver { text-align: center; color: #B8A88F; font-size: 12px; margin-top: 26px; padding-bottom: 22px; }
+
+    /* 头部备份按钮（新增，与统计卡同款玻璃质感） */
+    .hdr-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; margin-right: 10px; }
+    .hdr-btn {
+      flex: none; height: 40px; padding: 0 14px; border-radius: 14px;
+      border: 1px solid rgba(255,248,240,0.34);
+      background: linear-gradient(180deg, rgba(255,248,240,0.22) 0%, rgba(255,248,240,0.10) 100%);
+      -webkit-backdrop-filter: blur(10px) saturate(1.2); backdrop-filter: blur(10px) saturate(1.2);
+      color: #FFF6EA; font-size: 13.5px; font-weight: 700; letter-spacing: .3px;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 12px rgba(40,24,13,0.18), inset 0 1px 0 rgba(255,255,255,0.28);
+      transition: transform .12s cubic-bezier(0.22,1,0.36,1), background .15s;
+    }
+    .hdr-btn:active { transform: scale(0.95); background: linear-gradient(180deg, rgba(255,248,240,0.36), rgba(255,248,240,0.18)); }
+    .hdr-btn .dot { opacity: .85; }
+    @media (max-width: 520px) {
+      .hdr-btn { height: 36px; padding: 0 10px; font-size: 12.5px; }
+      .hdr-actions { gap: 6px; margin-right: 8px; }
+    }
   </style>
 </head>
 <body>
@@ -571,6 +591,10 @@
       </div>
       <div class="header-bottom">
         <div class="slogan" id="slogan"></div>
+        <div class="hdr-actions">
+          <button class="hdr-btn" id="copyBtn" title="复制备份">⧉ 复制备份</button>
+          <button class="hdr-btn" id="restoreBtn" title="恢复备份">↺ 恢复</button>
+        </div>
         <div class="header-right">
           <div class="stat-card" id="totalCupsCard">
             <div class="stat-num" id="totalCups">0</div>
@@ -588,7 +612,6 @@
       <div class="toolbar">
         <button class="tool-btn" id="upgradeBtn">🔄 升级</button>
         <button class="tool-btn" id="galleryBtn">🤓 图鉴</button>
-        <button class="tool-btn" id="backupBtn">📦 备份</button>
       </div>
       <div class="upgrade-status" id="upgradeStatus" style="text-align:center; font-size:12.5px; min-height:14px; margin:0 0 6px; color:#8B6B4D;"></div>
       <div class="error-tip" id="errorTip"></div>
@@ -638,16 +661,15 @@
 
   <div class="modal-overlay" id="backupModal">
     <div class="modal">
-      <div class="modal-title">备份 / 恢复</div>
+      <div class="modal-title">恢复备份</div>
       <div class="modal-scroll">
-        <div class="modal-label">全部记录（含照片）都在这段文本里</div>
-        <textarea class="modal-input" id="backupText" style="height:170px; font-size:11px; line-height:1.5;" placeholder="点「复制备份」生成文本；恢复时把备份文本整段粘进来，再点「粘贴恢复」"></textarea>
+        <div class="modal-label">把之前复制的备份文本整段粘进来</div>
+        <textarea class="modal-input" id="backupText" style="height:170px; font-size:11px; line-height:1.5;" placeholder="粘贴备份文本…"></textarea>
         <div class="type-hint" id="backupHint"></div>
       </div>
       <div class="modal-btns">
         <button class="modal-btn cancel" id="backupClose">关闭</button>
-        <button class="modal-btn cancel" id="backupRestore">粘贴恢复</button>
-        <button class="modal-btn save" id="backupCopy">复制备份</button>
+        <button class="modal-btn save" id="backupRestore">确认恢复</button>
       </div>
     </div>
   </div>
@@ -1328,7 +1350,7 @@
     document.getElementById('galleryClose').addEventListener('click', closeGallery);
     document.getElementById('galleryModal').addEventListener('click', (e) => { if (e.target.id === 'galleryModal') closeGallery(); });
 
-    /* ---------- 备份 / 恢复 ---------- */
+    /* ---------- 头部：复制备份 / 恢复备份 ---------- */
     function setBackupHint(msg, ok) {
       const el = document.getElementById('backupHint');
       if (el) { el.textContent = msg || ''; el.style.color = ok ? '#2e7d32' : '#8B6B4D'; }
@@ -1337,28 +1359,36 @@
       return JSON.stringify({ v: 2, app: 'cafe-latte', version: APP_VERSION, exportedAt: new Date().toISOString(), days: days });
     }
     function countCups(arr) { return arr.reduce((s, d) => s + ((d.photos || []).length), 0); }
-    function openBackup() {
-      const ta = document.getElementById('backupText');
-      ta.value = backupJSON();
-      setBackupHint('共 ' + days.length + ' 天 / ' + countCups(days) + ' 杯，复制走存进备忘录就安全了', true);
+    function copyBackup() {
+      const txt = backupJSON();
+      const done = (ok) => {
+        if (ok) setUpgradeStatus('已复制备份 ✓ ' + days.length + ' 天 / ' + countCups(days) + ' 杯，去备忘录粘贴保存', true);
+        else setUpgradeStatus('自动复制失败，请用「恢复」窗口里的文本手动复制', false);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(() => done(true)).catch(() => done(false));
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        let ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+        document.body.removeChild(ta);
+        done(ok);
+      }
+    }
+    function openRestore() {
+      document.getElementById('backupText').value = '';
+      setBackupHint('当前已有 ' + days.length + ' 天记录，恢复会整体替换', false);
       openModal('backupModal');
     }
-    function closeBackup() { closeModal('backupModal'); }
-    document.getElementById('backupBtn').addEventListener('click', openBackup);
-    document.getElementById('backupClose').addEventListener('click', closeBackup);
-    document.getElementById('backupModal').addEventListener('click', (e) => { if (e.target.id === 'backupModal') closeBackup(); });
-    document.getElementById('backupCopy').addEventListener('click', async () => {
-      const ta = document.getElementById('backupText');
-      if (!ta.value) ta.value = backupJSON();
-      ta.focus(); ta.select(); try { ta.setSelectionRange(0, 9999999); } catch (e) {}
-      let ok = false;
-      try { await navigator.clipboard.writeText(ta.value); ok = true; } catch (e) { ok = false; }
-      if (!ok) { try { ok = document.execCommand('copy'); } catch (e) { ok = false; } }
-      setBackupHint(ok ? '已复制 ✓ 去备忘录粘贴保存' : '自动复制失败，请手动长按全选复制', ok);
-    });
+    document.getElementById('copyBtn').addEventListener('click', copyBackup);
+    document.getElementById('restoreBtn').addEventListener('click', openRestore);
+    document.getElementById('backupClose').addEventListener('click', () => closeModal('backupModal'));
+    document.getElementById('backupModal').addEventListener('click', (e) => { if (e.target.id === 'backupModal') closeModal('backupModal'); });
     document.getElementById('backupRestore').addEventListener('click', async () => {
       const raw = (document.getElementById('backupText').value || '').trim();
-      if (!raw) { setBackupHint('先把备份文本粘进上面的框', false); return; }
+      if (!raw) { setBackupHint('先粘贴备份文本', false); return; }
       let data = null;
       try {
         const o = JSON.parse(raw);
@@ -1367,10 +1397,11 @@
       if (!data) { setBackupHint('没找到记录数据，恢复失败', false); return; }
       const clean = data.filter(d => d && d.date);
       if (!clean.length) { setBackupHint('备份里没有有效记录', false); return; }
-      if (days.length && !confirm('将用备份的 ' + clean.length + ' 天记录替换当前 ' + days.length + ' 天，确定？')) return;
+      if (days.length && !confirm('将用备份的 ' + clean.length + ' 天替换当前 ' + days.length + ' 天，确定？')) return;
       days = clean;
       await saveData();
-      setBackupHint('已恢复 ' + days.length + ' 天 / ' + countCups(days) + ' 杯 ✓', true);
+      closeModal('backupModal');
+      setUpgradeStatus('已恢复 ' + days.length + ' 天 / ' + countCups(days) + ' 杯 ✓', true);
     });
 
     /* ---------- PWA：注册 service worker + 一键升级 ---------- */
