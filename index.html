@@ -597,7 +597,7 @@
       <div class="header-bottom">
         <div class="slogan" id="slogan"></div>
         <div class="hdr-actions">
-          <button class="hdr-btn" id="copyBtn" title="复制备份">⧉ 复制备份</button>
+          <button class="hdr-btn" id="copyBtn" title="导出备份文件">⤓ 导出</button>
           <button class="hdr-btn" id="restoreBtn" title="恢复备份">↺ 恢复</button>
         </div>
         <div class="header-right">
@@ -716,8 +716,11 @@
     <div class="modal">
       <div class="modal-title">恢复备份</div>
       <div class="modal-scroll">
-        <div class="modal-label">把之前复制的备份文本整段粘进来</div>
-        <textarea class="modal-input" id="backupText" style="height:170px; font-size:11px; line-height:1.5;" placeholder="粘贴备份文本…"></textarea>
+        <div class="modal-label">方式一（推荐）：点「从文件选择」读取备份 .json</div>
+        <input type="file" id="backupFile" accept="application/json,.json" style="display:none">
+        <button class="modal-btn" id="backupPick" style="margin-bottom:10px;">📁 从文件选择</button>
+        <div class="modal-label">方式二：把备份文本整段粘进来</div>
+        <textarea class="modal-input" id="backupText" style="height:150px; font-size:11px; line-height:1.5;" placeholder="粘贴备份文本…"></textarea>
         <div class="type-hint" id="backupHint"></div>
       </div>
       <div class="modal-btns">
@@ -729,7 +732,7 @@
 
   <script>
     const STORAGE_KEY = 'cafe_latte_preview_v7';
-    const APP_VERSION = '47';
+    const APP_VERSION = '48';
     const COMPRESS_MAX = 1280;
     const COMPRESS_QUALITY = 0.78;
 
@@ -1364,22 +1367,21 @@
       return JSON.stringify({ v: 2, app: 'cafe-latte', version: APP_VERSION, exportedAt: new Date().toISOString(), days: days });
     }
     function countCups(arr) { return arr.reduce((s, d) => s + ((d.photos || []).length), 0); }
-    function copyBackup() {
+    function exportBackup() {
       const txt = backupJSON();
-      const done = (ok) => {
-        if (ok) setUpgradeStatus('已复制备份 ✓ ' + days.length + ' 天 / ' + countCups(days) + ' 杯，去备忘录粘贴保存', true);
-        else setUpgradeStatus('自动复制失败，请用「恢复」窗口里的文本手动复制', false);
+      const fname = 'coffee-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+      const file = new File([txt], fname, { type: 'application/json' });
+      const failClip = () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(txt).then(() => setUpgradeStatus('已复制（文本较大，备忘录易卡，建议用导出文件）', false)).catch(() => setBackupHint('导出失败，换 Safari 打开试试', false));
+        } else setBackupHint('此环境不支持导出，请用 Safari 打开本页', false);
       };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(txt).then(() => done(true)).catch(() => done(false));
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: '咖啡拉花手记备份' })
+          .then(() => setUpgradeStatus('已调起分享，选「存储到文件」即完成备份 ✓', true))
+          .catch(() => failClip());
       } else {
-        const ta = document.createElement('textarea');
-        ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
-        document.body.appendChild(ta); ta.focus(); ta.select();
-        let ok = false;
-        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
-        document.body.removeChild(ta);
-        done(ok);
+        failClip();
       }
     }
     function openRestore() {
@@ -1387,8 +1389,22 @@
       setBackupHint('当前已有 ' + days.length + ' 天记录，恢复会整体替换，建议先复制备份', false);
       openModal('backupModal');
     }
-    document.getElementById('copyBtn').addEventListener('click', copyBackup);
+    document.getElementById('copyBtn').addEventListener('click', exportBackup);
     document.getElementById('restoreBtn').addEventListener('click', openRestore);
+    const backupFileEl = document.getElementById('backupFile');
+    document.getElementById('backupPick').addEventListener('click', () => backupFileEl.click());
+    backupFileEl.addEventListener('change', async (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      try {
+        const raw = await f.text();
+        document.getElementById('backupText').value = raw;
+        setBackupHint('已读入文件（' + f.name + '），点「确认恢复」应用', true);
+      } catch (err) {
+        setBackupHint('读取文件失败', false);
+      }
+      e.target.value = '';
+    });
     document.getElementById('backupClose').addEventListener('click', () => closeModal('backupModal'));
     document.getElementById('backupModal').addEventListener('click', (e) => { if (e.target.id === 'backupModal') closeModal('backupModal'); });
     document.getElementById('backupRestore').addEventListener('click', async () => {
