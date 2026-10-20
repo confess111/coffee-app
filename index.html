@@ -22,7 +22,7 @@
     html, body {
       min-height: 100%;
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-      background: #EFE0D0;
+      background: #EBD9C6;
       color: #3D2817;
       -webkit-tap-highlight-color: rgba(0,0,0,0.08);
       overflow-x: hidden;
@@ -586,6 +586,72 @@
       .header-right { flex: 1 1 100%; justify-content: flex-end; order: 4; }
       .hdr-btn { font-size: 12px; padding: 0 9px; height: 34px; }
     }
+
+    /* ========== 毛玻璃统一层（新增；布局/字号/位置一律不动） ========== */
+    :root {
+      --gp-blur: 24px;
+      --gp-sat: 165%;
+      --gp-bg: rgba(255,253,250,0.62);
+      --gp-bg-soft: rgba(255,252,247,0.30);
+      --gp-bd: rgba(255,255,255,0.58);
+      --gp-shadow: 0 12px 32px rgba(120,80,40,0.16);
+      --gp-shadow-sm: 0 5px 16px rgba(120,80,40,0.12);
+    }
+    /* 背景：几团很淡的大色块，给玻璃"东西可透"（固定不动、不吃滚动性能） */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -12%;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(48% 36% at 10% 4%, rgba(166,114,66,0.78) 0%, rgba(166,114,66,0) 66%),
+        radial-gradient(42% 32% at 90% 12%, rgba(250,226,160,0.66) 0%, rgba(250,226,160,0) 68%),
+        radial-gradient(58% 44% at 58% 44%, rgba(255,242,218,0.62) 0%, rgba(255,242,218,0) 70%),
+        radial-gradient(46% 36% at 20% 80%, rgba(108,156,148,0.32) 0%, rgba(108,156,148,0) 70%),
+        radial-gradient(54% 42% at 94% 90%, rgba(148,98,58,0.46) 0%, rgba(148,98,58,0) 72%);
+    }
+    /* 关键：底色交给 html，body 透明，负层级色块才不会被 body 背景盖住 */
+    html { background-color: #EBD9C6; background-image: none; }
+    body { background: transparent; }
+    /* 每天卡片：半透明白 + 统一模糊 */
+    .day-card {
+      background: var(--gp-bg);
+      border: 1px solid var(--gp-bd);
+      -webkit-backdrop-filter: blur(var(--gp-blur)) saturate(var(--gp-sat));
+      backdrop-filter: blur(var(--gp-blur)) saturate(var(--gp-sat));
+      box-shadow: var(--gp-shadow), var(--glass-hi);
+    }
+    /* 照片格子 */
+    .photo-cell {
+      background: var(--gp-bg-soft);
+      border: 1px solid var(--gp-bd);
+      -webkit-backdrop-filter: blur(var(--gp-blur)) saturate(var(--gp-sat));
+      backdrop-filter: blur(var(--gp-blur)) saturate(var(--gp-sat));
+      box-shadow: var(--gp-shadow-sm), var(--glass-hi);
+    }
+    .photo-foot {
+      background: rgba(255,255,255,0.42);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
+      backdrop-filter: blur(14px) saturate(140%);
+      border-top: 1px solid rgba(255,255,255,0.5);
+    }
+    /* 弹窗：略实一点，保证文字清楚 */
+    .modal {
+      background: rgba(251,247,242,0.82);
+      -webkit-backdrop-filter: blur(22px) saturate(140%);
+      backdrop-filter: blur(22px) saturate(140%);
+      border: 1px solid rgba(255,255,255,0.6);
+    }
+    /* 顶部按钮 / 工具栏按钮 / 记录按钮：统一暖棕阴影 */
+    .hdr-btn, .tool-btn { box-shadow: var(--gp-shadow-sm), var(--glass-hi); }
+    .record-btn { box-shadow: 0 10px 26px rgba(120,80,40,0.24), var(--glass-hi); }
+    /* 统计卡：跟着统一变量 */
+    .stat-card {
+      -webkit-backdrop-filter: blur(var(--gp-blur)) saturate(var(--gp-sat));
+      backdrop-filter: blur(var(--gp-blur)) saturate(var(--gp-sat));
+      box-shadow: var(--gp-shadow-sm), var(--glass-hi);
+    }
   </style>
 </head>
 <body>
@@ -736,7 +802,7 @@
 
   <script>
     const STORAGE_KEY = 'cafe_latte_preview_v7';
-    const APP_VERSION = '42';
+    const APP_VERSION = '43';
     const COMPRESS_MAX = 1280;
     const COMPRESS_QUALITY = 0.78;
 
