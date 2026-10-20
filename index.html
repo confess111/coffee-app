@@ -574,6 +574,18 @@
       .hdr-btn { height: 36px; padding: 0 10px; font-size: 12.5px; }
       .hdr-actions { gap: 6px; margin-right: 8px; }
     }
+    /* 窄屏（手机/分屏）：slogan 独占一行，按钮与统计卡下一行，避免重叠 */
+    @media (max-width: 760px) {
+      .header-bottom { flex-wrap: wrap; row-gap: 12px; }
+      .slogan { flex: 1 1 100%; min-height: 0; }
+      .hdr-actions { margin-left: 0; margin-right: auto; order: 2; }
+      .header-right { order: 3; margin-left: auto; }
+    }
+    /* 手机窄屏：统计卡单独占一行，绝不再挤压重叠 */
+    @media (max-width: 430px) {
+      .header-right { flex: 1 1 100%; justify-content: flex-end; order: 4; }
+      .hdr-btn { font-size: 12px; padding: 0 9px; height: 34px; }
+    }
   </style>
 </head>
 <body>
