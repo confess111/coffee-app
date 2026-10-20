@@ -597,23 +597,13 @@
       --gp-shadow: 0 12px 32px rgba(120,80,40,0.16);
       --gp-shadow-sm: 0 5px 16px rgba(120,80,40,0.12);
     }
-    /* 背景：几团很淡的大色块，给玻璃"东西可透"（固定不动、不吃滚动性能） */
-    body::before {
-      content: "";
-      position: fixed;
-      inset: -12%;
-      z-index: -1;
-      pointer-events: none;
-      background:
-        radial-gradient(50% 40% at 8% 6%, rgba(158,104,58,0.92) 0%, rgba(158,104,58,0) 64%),
-        radial-gradient(44% 34% at 92% 10%, rgba(250,220,150,0.82) 0%, rgba(250,220,150,0) 66%),
-        radial-gradient(60% 48% at 56% 38%, rgba(255,246,228,0.74) 0%, rgba(255,246,228,0) 70%),
-        radial-gradient(48% 40% at 14% 74%, rgba(96,152,142,0.46) 0%, rgba(96,152,142,0) 70%),
-        radial-gradient(56% 46% at 96% 86%, rgba(140,88,48,0.62) 0%, rgba(140,88,48,0) 72%),
-        radial-gradient(52% 40% at 46% 100%, rgba(126,74,40,0.40) 0%, rgba(126,74,40,0) 74%);
+    /* 背景：纯棕、向下沉（上浅下深），直接铺在 html 上，最稳 */
+    html {
+      background-color: #EBD9C6;
+      background-image: linear-gradient(180deg, #EADBC4 0%, #DFC4A0 26%, #C89B68 55%, #A87447 80%, #8B5B34 100%);
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
     }
-    /* 关键：底色交给 html，body 透明，负层级色块才不会被 body 背景盖住 */
-    html { background-color: #EBD9C6; background-image: none; }
     body { background: transparent; }
     /* 每天卡片：半透明白 + 统一模糊 */
     .day-card {
@@ -803,7 +793,7 @@
 
   <script>
     const STORAGE_KEY = 'cafe_latte_preview_v7';
-    const APP_VERSION = '44';
+    const APP_VERSION = '45';
     const COMPRESS_MAX = 1280;
     const COMPRESS_QUALITY = 0.78;
 
