@@ -597,7 +597,8 @@
       <div class="header-bottom">
         <div class="slogan" id="slogan"></div>
         <div class="hdr-actions">
-          <button class="hdr-btn" id="copyBtn" title="导出备份文件">⤓ 导出</button>
+          <button class="hdr-btn" id="copyShortBtn" title="复制纯文字短码（不含图片，可贴备忘录）">📋 复制</button>
+          <button class="hdr-btn" id="copyBtn" title="导出完整备份文件（含图片）">⤓ 导出</button>
           <button class="hdr-btn" id="restoreBtn" title="恢复备份">↺ 恢复</button>
         </div>
         <div class="header-right">
@@ -719,9 +720,10 @@
         <div class="modal-label">方式一（推荐）：点「从文件选择」读取备份 .json</div>
         <input type="file" id="backupFile" accept="application/json,.json" style="display:none">
         <button class="modal-btn" id="backupPick" style="margin-bottom:10px;">📁 从文件选择</button>
-        <div class="modal-label">方式二：把备份文本整段粘进来</div>
-        <textarea class="modal-input" id="backupText" style="height:150px; font-size:11px; line-height:1.5;" placeholder="粘贴备份文本…"></textarea>
+        <div class="modal-label">方式二：把备份文本整段粘进来（完整 .json 或「复制」出的纯文字短码都支持）</div>
+        <textarea class="modal-input" id="backupText" style="height:150px; font-size:11px; line-height:1.5;" placeholder="粘贴备份文本或短码…"></textarea>
         <div class="type-hint" id="backupHint"></div>
+        <div class="type-hint" style="margin-top:8px;color:#8B6B4D;">⚠️ 纯文字短码只含文字评价、不含图片。用它恢复时，现有照片会保留、只更新文字。</div>
       </div>
       <div class="modal-btns">
         <button class="modal-btn cancel" id="backupClose">关闭</button>
@@ -733,8 +735,8 @@
   <script>
     const STORAGE_KEY = 'cafe_latte_preview_v7';
     const APP_VERSION = '48';
-    const COMPRESS_MAX = 1280;
-    const COMPRESS_QUALITY = 0.78;
+    const COMPRESS_MAX = 1000;
+    const COMPRESS_QUALITY = 0.7;
 
     const SLOGANS = [
       '☕ 今日份练习，拉给自己看就好',
@@ -1367,6 +1369,59 @@
       return JSON.stringify({ v: 2, app: 'cafe-latte', version: APP_VERSION, exportedAt: new Date().toISOString(), days: days });
     }
     function countCups(arr) { return arr.reduce((s, d) => s + ((d.photos || []).length), 0); }
+
+    /* ---- 纯文字短码：gzip+base64，剔除图片，可贴备忘录 ---- */
+    function bbStrToBytes(str){ const b=new Uint8Array(str.length); for(let i=0;i<str.length;i++) b[i]=str.charCodeAt(i)&0xff; return b; }
+    function bbBytesToStr(b){ let s=''; for(let i=0;i<b.length;i++) s+=String.fromCharCode(b[i]); return s; }
+    function bbB64e(bytes){ let s=''; const b=bbBytesToStr(bytes); for(let i=0;i<b.length;i+=0x8000) s+=btoa(b.slice(i,i+0x8000)); return s; }
+    function bbB64d(s){ return bbStrToBytes(atob(s.replace(/\s+/g,''))); }
+    async function bbGzip(str){
+      if(typeof CompressionStream==='undefined') throw new Error('no gzip');
+      const cs=new CompressionStream('gzip');
+      const w=new Blob([str]).stream().pipeThrough(cs);
+      const ab=await new Response(w).arrayBuffer();
+      return new Uint8Array(ab);
+    }
+    async function bbGunzip(bytes){
+      const ds=new DecompressionStream('gzip');
+      const w=new Blob([bytes]).stream().pipeThrough(ds);
+      const ab=await new Response(w).arrayBuffer();
+      return new Uint8Array(ab);
+    }
+    function textOnlyDays() {
+      return days.map(d => ({
+        date: d.date,
+        weekday: d.weekday || '',
+        photos: (d.photos || []).map(p => ({ id: p.id || '', note: p.note || '', type: p.type || '', pattern: p.pattern || '' }))
+      }));
+    }
+    async function copyShortCode() {
+      if (typeof CompressionStream === 'undefined') {
+        alert('当前浏览器不支持压缩，请用最新版 Safari，或改用「导出」按钮存文件。');
+        return;
+      }
+      const obj = { v: 3, app: 'cafe-latte', textOnly: true, exportedAt: new Date().toISOString(), days: textOnlyDays() };
+      let b64;
+      try {
+        const gz = await bbGzip(JSON.stringify(obj));
+        b64 = bbB64e(gz).replace(/(.{80})/g, '$1\n').trim();
+      } catch (e) {
+        setBackupHint('生成短码失败：' + (e && e.message || e), false);
+        return;
+      }
+      const fallback = () => {
+        const ta = document.createElement('textarea');
+        ta.value = b64; ta.style.position='fixed'; ta.style.top='0'; ta.style.left='0';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        try { document.execCommand('copy'); setUpgradeStatus('已复制纯文字短码（也可长按手动复制）✓', true); }
+        catch (e) { alert('复制失败，请长按上方文本框手动复制'); }
+        setTimeout(() => { try { document.body.removeChild(ta); } catch(e){} }, 2500);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(b64).then(() => setUpgradeStatus('已复制纯文字短码（不含图片，可贴备忘录）✓', true)).catch(() => fallback());
+      } else fallback();
+    }
+    document.getElementById('copyShortBtn').addEventListener('click', copyShortCode);
     function exportBackup() {
       const txt = backupJSON();
       const fname = 'coffee-backup-' + new Date().toISOString().slice(0, 10) + '.json';
@@ -1407,9 +1462,51 @@
     });
     document.getElementById('backupClose').addEventListener('click', () => closeModal('backupModal'));
     document.getElementById('backupModal').addEventListener('click', (e) => { if (e.target.id === 'backupModal') closeModal('backupModal'); });
+    async function tryShortCodeRestore(raw) {
+      if (typeof DecompressionStream === 'undefined') return false;
+      if (!/^[A-Za-z0-9+/=\r\n]+$/.test(raw) || raw.replace(/\s+/g, '').length < 20) return false;
+      try {
+        const obj = JSON.parse(bbBytesToStr(await bbGunzip(bbB64d(raw))));
+        if (obj && obj.app === 'cafe-latte' && obj.textOnly && Array.isArray(obj.days)) {
+          await mergeRestore(obj.days);
+          return true;
+        }
+      } catch (e) {}
+      return false;
+    }
+    async function mergeRestore(textDays) {
+      const map = {};
+      days.forEach(d => { map[d.date] = d; });
+      textDays.forEach(td => {
+        if (!td || !td.date) return;
+        const photos = (td.photos || []).map(p => ({
+          id: p.id || (Date.now().toString() + Math.random().toString(36).slice(2, 6)),
+          note: p.note || '', type: p.type || '', pattern: p.pattern || ''
+        }));
+        const ex = map[td.date];
+        if (ex) {
+          const exMap = {};
+          (ex.photos || []).forEach(p => { exMap[p.id] = p; });
+          const merged = photos.map(p => {
+            const e = exMap[p.id];
+            return e ? Object.assign({}, e, { note: p.note, type: p.type, pattern: p.pattern }) : p;
+          });
+          (ex.photos || []).forEach(p => { if (!photos.find(x => x.id === p.id)) merged.push(p); });
+          ex.photos = merged;
+          ex.weekday = td.weekday || ex.weekday;
+        } else {
+          days.push({ date: td.date, weekday: td.weekday || '', photos: photos });
+          map[td.date] = days[days.length - 1];
+        }
+      });
+      await saveData();
+      closeModal('backupModal');
+      setUpgradeStatus('已用纯文字短码合并恢复（图片未变动）✓', true);
+    }
     document.getElementById('backupRestore').addEventListener('click', async () => {
       const raw = (document.getElementById('backupText').value || '').trim();
       if (!raw) { setBackupHint('先粘贴备份文本', false); return; }
+      if (await tryShortCodeRestore(raw)) return;
       let data = null;
       try {
         const o = JSON.parse(raw);
