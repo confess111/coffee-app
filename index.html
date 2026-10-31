@@ -731,9 +731,15 @@
 
   <script>
     const STORAGE_KEY = 'cafe_latte_preview_v7';
-    const APP_VERSION = '51';
+    const APP_VERSION = '52';
     const COMPRESS_MAX = 1000;
     const COMPRESS_QUALITY = 0.7;
+
+    /* 固定按北京时间（UTC+8）计算，不受设备时区影响 */
+    function bjNow() {
+      const d = new Date();
+      return new Date(d.getTime() + d.getTimezoneOffset() * 60000 + 28800000);
+    }
 
     const SLOGANS = [
       '☕ 今日份练习，拉给自己看就好',
@@ -1045,7 +1051,7 @@
       }
     }
     function openDatePicker() {
-      const t = new Date();
+      const t = bjNow();
       pickY = t.getFullYear(); pickM = t.getMonth() + 1; pickD = t.getDate();
       renderCalendar();
       openModal('dateModal');
@@ -1371,7 +1377,7 @@
     }
     function countCups(arr) { return arr.reduce((s, d) => s + ((d.photos || []).length), 0); }
     function backupFileName(ext) {
-      const d = new Date();
+      const d = bjNow();
       return '备份_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '_' + pad(d.getHours()) + pad(d.getMinutes()) + ext;
     }
 
