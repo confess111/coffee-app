@@ -598,7 +598,6 @@
         <div class="slogan" id="slogan"></div>
         <div class="hdr-actions">
           <button class="hdr-btn" id="copyBtn" title="导出完整备份文件（含图片）">⤓ 导出</button>
-          <button class="hdr-btn" id="copyGzBtn" title="导出压缩版备份文件（更小）" style="display:none;">⤓ 压缩导出</button>
           <button class="hdr-btn" id="restoreBtn" title="导入备份文件">↺ 导入</button>
         </div>
         <div class="header-right">
@@ -732,7 +731,7 @@
 
   <script>
     const STORAGE_KEY = 'cafe_latte_preview_v7';
-    const APP_VERSION = '50';
+    const APP_VERSION = '51';
     const COMPRESS_MAX = 1000;
     const COMPRESS_QUALITY = 0.7;
 
@@ -1376,21 +1375,10 @@
       return '备份_' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '_' + pad(d.getHours()) + pad(d.getMinutes()) + ext;
     }
 
-    if (typeof CompressionStream !== 'undefined') {
-      const gzBtn = document.getElementById('copyGzBtn');
-      if (gzBtn) gzBtn.style.display = '';
-    }
-    async function exportBackup(gz) {
+    async function exportBackup() {
       try {
         const txt = backupJSON();
-        let file;
-        if (gz) {
-          if (typeof CompressionStream === 'undefined') { setUpgradeStatus('此浏览器不支持压缩导出，请用「导出」', false); return; }
-          const blob = await new Response(new Blob([txt]).stream().pipeThrough(new CompressionStream('gzip'))).blob();
-          file = new File([blob], backupFileName('.json.gz'), { type: 'application/gzip' });
-        } else {
-          file = new File([txt], backupFileName('.json'), { type: 'application/json' });
-        }
+        const file = new File([txt], backupFileName('.json'), { type: 'application/json' });
         if (!(navigator.canShare && navigator.canShare({ files: [file] }))) {
           setUpgradeStatus('系统无法分享此文件，导出未完成', false);
           return;
@@ -1428,8 +1416,7 @@
       setImportHint('当前已有 ' + days.length + ' 天记录。选好备份文件后点「开始导入」。', '#8B6B4D');
       openModal('backupModal');
     }
-    document.getElementById('copyBtn').addEventListener('click', () => exportBackup(false));
-    document.getElementById('copyGzBtn').addEventListener('click', () => exportBackup(true));
+    document.getElementById('copyBtn').addEventListener('click', () => exportBackup());
     document.getElementById('restoreBtn').addEventListener('click', openRestore);
     const backupFileEl = document.getElementById('backupFile');
     document.getElementById('backupPick').addEventListener('click', () => backupFileEl.click());
