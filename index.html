@@ -732,7 +732,7 @@
 
   <script>
     const STORAGE_KEY = 'cafe_latte_preview_v7';
-    const APP_VERSION = '48';
+    const APP_VERSION = '49';
     const COMPRESS_MAX = 1000;
     const COMPRESS_QUALITY = 0.7;
 
@@ -1620,21 +1620,22 @@
       btn.disabled = true;
       setUpgradeStatus('正在连接主控端检查更新…', false);
       try {
+        const bust = () => { window.location.replace(location.pathname + '?t=' + Date.now()); };
         let reg = swReg;
         if (!reg) reg = await navigator.serviceWorker.getRegistration();
         if (!reg) {
-          setUpgradeStatus('已是最新 v' + APP_VERSION + '，你的 ' + (days ? days.length : 0) + ' 天内容原样保留 ✓', true);
-          btn.disabled = false;
+          setUpgradeStatus('正在刷新页面获取最新…', false);
+          setTimeout(bust, 600);
           return;
         }
         await reg.update();
         if (activateWaiting(reg)) {
           setUpgradeStatus('正在升级到最新壳…', false);
-          setTimeout(() => { window.location.reload(); }, 1500);
+          setTimeout(bust, 1500);
         } else {
           // SW 未变化但仍强制刷新一次页面：确保只改了 index.html 时也能拉到最新内容
           setUpgradeStatus('正在刷新页面获取最新…', false);
-          setTimeout(() => { window.location.reload(); }, 800);
+          setTimeout(bust, 800);
         }
       } catch (e) {
         setUpgradeStatus('升级检查失败，稍后重试', false);
