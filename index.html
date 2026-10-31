@@ -732,7 +732,7 @@
 
   <script>
     const STORAGE_KEY = 'cafe_latte_preview_v7';
-    const APP_VERSION = '49';
+    const APP_VERSION = '50';
     const COMPRESS_MAX = 1000;
     const COMPRESS_QUALITY = 0.7;
 
@@ -794,6 +794,7 @@
     const DB_NAME = 'cafe_latte_db', STORE = 'kv';
     const META_KEY = 'meta';            // { v:2, list: ['2026-08-14', ...] }
     const DAY_PREFIX = 'day_';          // day_2026-08-14
+    const CORRUPT_PREFIX = 'corrupt:';  // corrupt:2026-08-14 损坏天的原文，只保留不删除
     const LEGACY_KEY = 'days';          // v1 单 key 旧数据
     let _db = null;
     function openDB() {
@@ -838,15 +839,19 @@
             if (meta && meta.v === 2 && Array.isArray(meta.list)) {
               const loaded = [], bad = [];
               for (const date of meta.list) {
+                let raw = null;
                 try {
-                  const raw = await idbGet(_db, DAY_PREFIX + date);
+                  raw = await idbGet(_db, DAY_PREFIX + date);
                   if (raw) {
                     const day = JSON.parse(raw);
                     if (day && day.date) loaded.push(day);
                   }
-                } catch { bad.push(date); }
+                } catch {
+                  bad.push(date);
+                  try { if (raw) await idbSet(_db, CORRUPT_PREFIX + date, raw); } catch {}
+                }
               }
-              if (bad.length) showError(`${bad.length} 天的记录损坏，已自动跳过`);
+              if (bad.length) showError(`${bad.length} 天的记录损坏，原文已保留（键名 corrupt:日期），不会被删除`);
               return loaded;
             }
           }
@@ -883,21 +888,10 @@
       if (_db) {
         try {
           const list = val.map(d => d.date);
-          let oldList = [];
-          try {
-            const oldMetaRaw = await idbGet(_db, META_KEY);
-            if (oldMetaRaw) {
-              const oldMeta = JSON.parse(oldMetaRaw);
-              if (oldMeta && Array.isArray(oldMeta.list)) oldList = oldMeta.list;
-            }
-          } catch {}
           const tx = _db.transaction(STORE, 'readwrite');
           const store = tx.objectStore(STORE);
           store.put(JSON.stringify({ v: 2, list }), META_KEY);
           for (const day of val) store.put(JSON.stringify(day), DAY_PREFIX + day.date);
-          for (const old of oldList) {
-            if (!list.includes(old)) store.delete(DAY_PREFIX + old);
-          }
           await new Promise((resolve, reject) => {
             tx.oncomplete = resolve;
             tx.onerror = () => reject(tx.error || new Error('保存失败'));
@@ -988,8 +982,13 @@
       }).join('');
 
       listEl.querySelectorAll('.add-file').forEach(el => el.addEventListener('change', handleFile));
-      listEl.querySelectorAll('.day-delete').forEach(el => el.addEventListener('click', () => {
-        if (confirm(`删除 ${el.dataset.date} 的记录？`)) { days = days.filter(d => d.date !== el.dataset.date); saveData(); }
+      listEl.querySelectorAll('.day-delete').forEach(el => el.addEventListener('click', async () => {
+        if (confirm(`删除 ${el.dataset.date} 的记录？`)) {
+          const date = el.dataset.date;
+          days = days.filter(d => d.date !== date);
+          try { if (_db) await idbDel(_db, DAY_PREFIX + date); } catch {}
+          saveData();
+        }
       }));
       listEl.querySelectorAll('.cup-toggle').forEach(el => el.addEventListener('click', () => openDetail(el.dataset.date, el.dataset.id)));
       listEl.querySelectorAll('.note-btn').forEach(el => el.addEventListener('click', () => openDetail(el.dataset.date, el.dataset.id)));
@@ -1661,6 +1660,11 @@
     document.getElementById('installClose').addEventListener('click', () => installBar.classList.remove('show'));
 
     (async function () {
+      try {
+        if (navigator.storage && navigator.storage.persist) {
+          navigator.storage.persist().catch(() => {});
+        }
+      } catch (e) {}
       await initStore();
       await loadData();
       document.getElementById('footerVer').textContent = '逸的咖啡拉花手记 · v' + APP_VERSION;
